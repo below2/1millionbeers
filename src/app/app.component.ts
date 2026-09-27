@@ -8,17 +8,17 @@ import { StatsDashboardComponent } from './components/stats-dashboard/stats-dash
 import { ActivityFeedComponent } from './components/activity-feed/activity-feed.component';
 
 @Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [
-    CommonModule,
-    HeroProgressComponent,
-    LogBeerFormComponent,
-    LeaderboardComponent,
-    StatsDashboardComponent,
-    ActivityFeedComponent,
-  ],
-  template: `
+    selector: 'app-root',
+    imports: [
+        CommonModule,
+        HeroProgressComponent,
+        LogBeerFormComponent,
+        LeaderboardComponent,
+        StatsDashboardComponent,
+        ActivityFeedComponent,
+    ],
+    standalone: true,
+    template: `
     <div class="min-h-screen px-4 py-6 sm:px-6 sm:py-10 max-w-5xl mx-auto space-y-6">
       <app-hero-progress />
 
@@ -41,7 +41,7 @@ import { ActivityFeedComponent } from './components/activity-feed/activity-feed.
         Dom · Josh · James · Grayson · Brendan — onward to 1,000,000 🍻
       </footer>
     </div>
-  `,
+  `
 })
 export class AppComponent {
   readonly store = inject(BeerStoreService);

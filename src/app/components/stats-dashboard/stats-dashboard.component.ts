@@ -3,10 +3,10 @@ import { Component, inject } from '@angular/core';
 import { BeerStoreService } from '../../core/services/beer-store.service';
 
 @Component({
-  selector: 'app-stats-dashboard',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-stats-dashboard',
+    imports: [CommonModule],
+    standalone: true,
+    template: `
     <section class="grid grid-cols-3 gap-3 sm:gap-4">
       <div class="card p-4 text-center">
         <p class="text-2xl sm:text-3xl font-bold text-pub-amber">{{ store.todayTotal() | number }}</p>
@@ -21,7 +21,7 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
         <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1">Avg / Day</p>
       </div>
     </section>
-  `,
+  `
 })
 export class StatsDashboardComponent {
   readonly store = inject(BeerStoreService);

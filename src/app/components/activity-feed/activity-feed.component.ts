@@ -4,10 +4,10 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
 import { TimeAgoPipe } from './time-ago.pipe';
 
 @Component({
-  selector: 'app-activity-feed',
-  standalone: true,
-  imports: [CommonModule, TimeAgoPipe],
-  template: `
+    selector: 'app-activity-feed',
+    imports: [CommonModule, TimeAgoPipe],
+    standalone: true,
+    template: `
     <section class="card p-5 sm:p-6">
       <h2 class="font-display text-lg font-bold text-pub-amber mb-4">📜 Recent Activity</h2>
 
@@ -37,7 +37,7 @@ import { TimeAgoPipe } from './time-ago.pipe';
         </ul>
       }
     </section>
-  `,
+  `
 })
 export class ActivityFeedComponent {
   readonly store = inject(BeerStoreService);

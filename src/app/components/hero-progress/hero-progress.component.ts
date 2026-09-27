@@ -4,10 +4,10 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
 import { GOAL_BEERS } from '../../core/models/beer.model';
 
 @Component({
-  selector: 'app-hero-progress',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-hero-progress',
+    imports: [CommonModule],
+    standalone: true,
+    template: `
     <section class="card p-6 sm:p-8 text-center shadow-glow">
       <p class="uppercase tracking-[0.3em] text-xs text-pub-amber/80 mb-2">
         The Million Beer Challenge
@@ -35,7 +35,7 @@ import { GOAL_BEERS } from '../../core/models/beer.model';
         {{ remaining() | number }} beers to go — keep pouring.
       </p>
     </section>
-  `,
+  `
 })
 export class HeroProgressComponent {
   readonly store = inject(BeerStoreService);

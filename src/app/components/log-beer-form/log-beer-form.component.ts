@@ -5,10 +5,10 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
 import { DRINKERS, Drinker } from '../../core/models/beer.model';
 
 @Component({
-  selector: 'app-log-beer-form',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
+    selector: 'app-log-beer-form',
+    imports: [CommonModule, FormsModule],
+    standalone: true,
+    template: `
     <section class="card p-5 sm:p-6">
       <h2 class="font-display text-lg font-bold text-pub-amber mb-4">🍻 Log a Beer</h2>
 
@@ -93,7 +93,7 @@ import { DRINKERS, Drinker } from '../../core/models/beer.model';
         {{ store.submitting() ? 'Pouring...' : 'Log it 🍺' }}
       </button>
     </section>
-  `,
+  `
 })
 export class LogBeerFormComponent {
   readonly store = inject(BeerStoreService);

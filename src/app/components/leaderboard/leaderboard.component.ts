@@ -5,10 +5,10 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 @Component({
-  selector: 'app-leaderboard',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
+    selector: 'app-leaderboard',
+    imports: [CommonModule],
+    standalone: true,
+    template: `
     <section class="card p-5 sm:p-6">
       <h2 class="font-display text-lg font-bold text-pub-amber mb-4">🏆 Leaderboard</h2>
 
@@ -37,7 +37,7 @@ const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
         }
       </ul>
     </section>
-  `,
+  `
 })
 export class LeaderboardComponent {
   readonly store = inject(BeerStoreService);
