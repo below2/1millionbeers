@@ -3,25 +3,42 @@ import { Component, inject } from '@angular/core';
 import { BeerStoreService } from '../../core/services/beer-store.service';
 
 @Component({
-    selector: 'app-stats-dashboard',
-    imports: [CommonModule],
-    standalone: true,
-    template: `
-    <section class="grid grid-cols-3 gap-3 sm:gap-4">
-      <div class="card p-4 text-center">
-        <p class="text-2xl sm:text-3xl font-bold text-pub-amber">{{ store.todayTotal() | number }}</p>
-        <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1">Today</p>
+  selector: 'app-stats-dashboard',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div class="card p-4 sm:p-5 text-center">
+        <p class="text-3xl mb-1">🤕</p>
+        <p class="text-2xl sm:text-3xl font-arcade font-black text-pub-amber">
+          {{ store.todayTotal() | number }}
+        </p>
+        <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1 font-bold">
+          Today's Damage
+        </p>
       </div>
-      <div class="card p-4 text-center">
-        <p class="text-2xl sm:text-3xl font-bold text-pub-amber">{{ store.monthTotal() | number }}</p>
-        <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1">This Month</p>
+
+      <div class="card p-4 sm:p-5 text-center">
+        <p class="text-3xl mb-1">🏋️</p>
+        <p class="text-2xl sm:text-3xl font-arcade font-black text-pub-amber">
+          {{ store.monthTotal() | number }}
+        </p>
+        <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1 font-bold">
+          Monthly Heavy Lifting
+        </p>
       </div>
-      <div class="card p-4 text-center">
-        <p class="text-2xl sm:text-3xl font-bold text-pub-amber">{{ store.avgPerDay() | number: '1.1-1' }}</p>
-        <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1">Avg / Day</p>
+
+      <div class="card p-4 sm:p-5 text-center">
+        <p class="text-3xl mb-1">🐎</p>
+        <p class="text-2xl sm:text-3xl font-arcade font-black text-pub-amber">
+          {{ store.avgPerDay() | number: '1.1-1' }}
+        </p>
+        <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1 font-bold">
+          Group Pace (beers/day)
+        </p>
       </div>
     </section>
-  `
+  `,
 })
 export class StatsDashboardComponent {
   readonly store = inject(BeerStoreService);
