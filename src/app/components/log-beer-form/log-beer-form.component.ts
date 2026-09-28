@@ -35,7 +35,7 @@ import {
       <!-- Drinker chips w/ avatar -->
       <div class="mb-5">
         <label class="block text-xs uppercase tracking-wide text-pub-foam/50 mb-2 font-bold">
-          Who's drinking?
+          Who's drankin?
         </label>
         <div class="flex flex-wrap gap-2.5">
           @for (name of drinkers; track name) {

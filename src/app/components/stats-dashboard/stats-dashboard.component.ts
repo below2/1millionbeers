@@ -14,7 +14,7 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
           {{ store.todayTotal() | number }}
         </p>
         <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1 font-bold">
-          Today's Damage
+          Today's Count
         </p>
       </div>
 
@@ -24,7 +24,7 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
           {{ store.monthTotal() | number }}
         </p>
         <p class="text-[10px] sm:text-xs uppercase tracking-wide text-pub-foam/50 mt-1 font-bold">
-          Monthly Heavy Lifting
+          Monthly Count
         </p>
       </div>
 

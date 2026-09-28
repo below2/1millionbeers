@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html, body {
-  height: 100%;
+  min-height: 100dvh;
 }
 
 body {
@@ -45,7 +45,10 @@ body {
     @apply px-4 py-3 rounded-xl border-3 border-stout font-extrabold text-sm sm:text-base
            bg-pub-surface2 text-pub-foam shadow-brutalSm
            transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none
-           hover:-translate-y-0.5 hover:shadow-brutal;
+           hover:-translate-y-0.5 hover:shadow-brutal
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0
+           disabled:hover:shadow-brutalSm disabled:active:translate-x-0 disabled:active:translate-y-0
+           disabled:active:shadow-brutalSm;
   }
   .btn-brutal-active {
     @apply bg-pub-amber text-stout border-stout shadow-brutalInset translate-x-[2px] translate-y-[2px];
