@@ -3,10 +3,10 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BeerStoreService } from '../../core/services/beer-store.service';
 import {
-  DRINKERS,
   Drinker,
-  FRIEND_AVATARS,
   avatarFallback,
+  avatarFor,
+  displayName,
 } from '../../core/models/beer.model';
 
 @Component({
@@ -32,26 +32,26 @@ import {
         🍻 Log a Beer
       </h2>
 
-      <!-- Drinker chips w/ avatar -->
+      <!-- Drinker chips w/ avatar (all registered players) -->
       <div class="mb-5">
         <label class="block text-xs uppercase tracking-wide text-pub-foam/50 mb-2 font-bold">
           Who's drankin?
         </label>
-        <div class="flex flex-wrap gap-2.5">
-          @for (name of drinkers; track name) {
+        <div class="flex flex-wrap gap-2.5 max-h-48 overflow-y-auto pr-1">
+          @for (p of store.players(); track p.username) {
             <button
               type="button"
               class="drinker-chip"
-              [class.drinker-chip-active]="selectedDrinker() === name"
-              (click)="selectedDrinker.set(name)"
+              [class.drinker-chip-active]="selectedDrinker() === p.username"
+              (click)="selectedDrinker.set(p.username)"
             >
               <img
-                [src]="avatars[name]"
-                (error)="onAvatarError($event, name)"
-                [alt]="name"
+                [src]="avatar(p.username)"
+                (error)="onAvatarError($event, p.username)"
+                [alt]="name(p.username)"
                 class="avatar-ring w-7 h-7 sm:w-8 sm:h-8"
               />
-              <span class="font-bold text-sm sm:text-base">{{ name }}</span>
+              <span class="font-bold text-sm sm:text-base">{{ name(p.username) }}</span>
             </button>
           }
         </div>
@@ -129,11 +129,14 @@ import {
         <input
           type="password"
           inputmode="numeric"
-          placeholder="Enter shared PIN"
+          placeholder="Your personal PIN (or the master PIN)"
           class="w-full bg-pub-surface2 border-3 border-stout rounded-xl px-3 py-2 text-sm tracking-widest
                  focus:outline-none focus:border-pub-amber"
           [(ngModel)]="pin"
         />
+        <p class="text-[11px] text-pub-foam/40 mt-1.5 font-bold">
+          Personal PINs only work for your own name.
+        </p>
       </div>
 
       @if (errorMessage()) {
@@ -156,10 +159,11 @@ import {
 })
 export class LogBeerFormComponent {
   readonly store = inject(BeerStoreService);
-  readonly drinkers = DRINKERS;
-  readonly avatars = FRIEND_AVATARS;
+  readonly avatar = avatarFor;
+  readonly name = displayName;
 
-  readonly selectedDrinker = signal<Drinker | null>(null);
+  // Pre-select whoever last used / registered on this device.
+  readonly selectedDrinker = signal<Drinker | null>(this.store.getSavedUsername());
   readonly count = signal(1);
   note = '';
   pin = this.store.getSavedPin() ?? '';
@@ -181,7 +185,7 @@ export class LogBeerFormComponent {
     this.count.set(n);
   }
 
-  /** Swap in a generated initials avatar if the real photo file isn't there yet. */
+  /** Swap in a generated initials avatar if the real photo file isn't there. */
   onAvatarError(event: Event, name: Drinker): void {
     (event.target as HTMLImageElement).src = avatarFallback(name);
   }
@@ -203,7 +207,7 @@ export class LogBeerFormComponent {
     });
 
     if (result.success) {
-      this.successMessage.set(`Logged ${loggedCount} for ${drinker}!`);
+      this.successMessage.set(`Logged ${loggedCount} for ${displayName(drinker)}!`);
       this.pinRemembered.set(true);
       this.note = '';
       this.count.set(1);

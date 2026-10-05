@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { BeerStoreService } from '../../core/services/beer-store.service';
 import { TimeAgoPipe } from './time-ago.pipe';
-import { Drinker, FRIEND_AVATARS, avatarFallback } from '../../core/models/beer.model';
+import { Drinker, avatarFallback, avatarFor, displayName } from '../../core/models/beer.model';
 
 const PAGE_SIZE = 10;
 
@@ -42,15 +42,15 @@ const PAGE_SIZE = 10;
               class="flex items-center gap-3 p-2.5 rounded-xl border-3 border-stout bg-pub-surface2"
             >
               <img
-                [src]="avatars[log.drinker]"
+                [src]="avatar(log.drinker)"
                 (error)="onAvatarError($event, log.drinker)"
-                [alt]="log.drinker"
+                [alt]="name(log.drinker)"
                 class="avatar-ring w-9 h-9 shrink-0"
               />
 
               <div class="min-w-0 flex-1">
                 <p class="text-sm text-pub-foam leading-snug">
-                  <span class="font-extrabold text-pub-amber">{{ log.drinker }}</span>
+                  <span class="font-extrabold text-pub-amber">{{ name(log.drinker) }}</span>
                   logged
                   <span class="font-extrabold text-neon">{{ log.count }}</span>
                   {{ log.count === 1 ? 'beer' : 'beers' }}
@@ -106,25 +106,33 @@ const PAGE_SIZE = 10;
 })
 export class ActivityFeedComponent {
   readonly store = inject(BeerStoreService);
-  readonly avatars = FRIEND_AVATARS;
+  readonly avatar = avatarFor;
+  readonly name = displayName;
 
   readonly pageSize = PAGE_SIZE;
   readonly page = signal(1);
 
-  readonly totalLogs = computed(() => this.store.logs().length);
+  // Respects the All / Primary filter
+  readonly totalLogs = computed(() => this.store.filteredLogs().length);
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalLogs() / this.pageSize)));
 
-  // Clamp against totalPages so a stale page (e.g. after logs shrink) never
-  // points past the end — purely a display-layer safeguard.
   private readonly clampedPage = computed(() => Math.min(this.page(), this.totalPages()));
 
   readonly pagedLogs = computed(() => {
     const start = (this.clampedPage() - 1) * this.pageSize;
-    return this.store.logs().slice(start, start + this.pageSize);
+    return this.store.filteredLogs().slice(start, start + this.pageSize);
   });
 
   readonly rangeStart = computed(() => (this.totalLogs() === 0 ? 0 : (this.clampedPage() - 1) * this.pageSize + 1));
   readonly rangeEnd = computed(() => Math.min(this.totalLogs(), this.clampedPage() * this.pageSize));
+
+  constructor() {
+    // Switching All <-> Primary jumps back to page 1.
+    effect(() => {
+      this.store.filter();
+      this.page.set(1);
+    });
+  }
 
   prevPage(): void {
     this.page.update((p) => Math.max(1, p - 1));

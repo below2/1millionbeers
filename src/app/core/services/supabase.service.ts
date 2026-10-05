@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
-import { BeerLog, Drinker } from '../models/beer.model';
+import { BeerLog, Drinker, Player, RegisterResult } from '../models/beer.model';
 
 /**
  * Thin wrapper around the Supabase client. Keeps all direct SDK usage in one
@@ -26,9 +26,31 @@ export class SupabaseService {
     return (data ?? []) as BeerLog[];
   }
 
+  /** All registered players (via the pin-less public view). Core 5 first. */
+  async fetchPlayers(): Promise<Player[]> {
+    const { data, error } = await this.client
+      .from('drinkers_public')
+      .select('username, is_primary, created_at')
+      .order('is_primary', { ascending: false })
+      .order('username', { ascending: true });
+
+    if (error) throw error;
+    return (data ?? []) as Player[];
+  }
+
+  /** Register a new player. Returns the generated PIN (shown to the user once). */
+  async registerDrinker(username: string): Promise<RegisterResult> {
+    const { data, error } = await this.client.rpc('register_drinker', {
+      p_username: username,
+    });
+
+    if (error) throw error;
+    return data as RegisterResult;
+  }
+
   /**
-   * Insert a new log via the `log_beer` RPC. The RPC validates the PIN
-   * server-side — direct table inserts are blocked by RLS.
+   * Insert a new log via the `log_beer` RPC. The RPC accepts either the
+   * player's personal PIN or the master PIN, validated server-side.
    */
   async logBeer(params: {
     drinker: Drinker;

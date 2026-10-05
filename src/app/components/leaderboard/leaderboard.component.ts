@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { BeerStoreService } from '../../core/services/beer-store.service';
-import { Drinker, FRIEND_AVATARS, avatarFallback } from '../../core/models/beer.model';
+import { Drinker, avatarFallback, avatarFor, displayName } from '../../core/models/beer.model';
 
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 const RANK_STYLES: Record<number, string> = {
@@ -20,7 +20,7 @@ const RANK_STYLES: Record<number, string> = {
         🏆 Leaderboard
       </h2>
 
-      <ul class="space-y-3">
+      <ul class="space-y-3 max-h-[34rem] overflow-y-auto pr-1">
         @for (entry of store.leaderboard(); track entry.drinker) {
           <li
             class="flex items-center gap-3 p-2.5 rounded-2xl border-3 border-stout"
@@ -31,16 +31,16 @@ const RANK_STYLES: Record<number, string> = {
             </span>
 
             <img
-              [src]="avatars[entry.drinker]"
+              [src]="avatar(entry.drinker)"
               (error)="onAvatarError($event, entry.drinker)"
-              [alt]="entry.drinker"
+              [alt]="name(entry.drinker)"
               class="avatar-ring w-9 h-9 sm:w-10 sm:h-10 shrink-0"
             />
 
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-baseline mb-1">
                 <span class="font-extrabold truncate" [class.text-stout]="entry.rank <= 3">
-                  {{ entry.drinker }}
+                  {{ name(entry.drinker) }}
                 </span>
                 <span class="text-sm font-mono font-bold" [class.text-stout]="entry.rank <= 3">
                   {{ entry.total | number }}
@@ -68,7 +68,8 @@ const RANK_STYLES: Record<number, string> = {
 })
 export class LeaderboardComponent {
   readonly store = inject(BeerStoreService);
-  readonly avatars = FRIEND_AVATARS;
+  readonly avatar = avatarFor;
+  readonly name = displayName;
 
   medal(rank: number): string {
     return MEDALS[rank] ?? `#${rank}`;
