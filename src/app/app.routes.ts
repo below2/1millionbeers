@@ -12,5 +12,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/join/join.component').then((m) => m.JoinComponent),
   },
+  {
+    path: 'history',
+    loadComponent: () =>
+      import('./pages/history/history.component').then((m) => m.HistoryComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

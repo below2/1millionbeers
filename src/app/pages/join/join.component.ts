@@ -24,7 +24,7 @@ const USERNAME_RE = /^[a-zA-Z0-9]{3,20}$/;
         <!-- SUCCESS: show PIN once -->
         <section class="card-amber p-6 sm:p-8 text-center">
           <p class="text-4xl mb-2">🎉</p>
-          <h1 class="font-arcade font-black text-2xl uppercase tracking-wide mb-1">
+          <h1 class="font-arcade font-black text-2xl uppercase tracking-wide mb-1" style="word-wrap: break-word;">
             Welcome, {{ name(r.username) }}!
           </h1>
           <p class="text-sm font-semibold mb-5">You're in the race. Here's your personal PIN:</p>
@@ -40,10 +40,10 @@ const USERNAME_RE = /^[a-zA-Z0-9]{3,20}$/;
             Save this PIN! You will need it to log beers.
           </p>
           <p class="text-xs font-semibold opacity-80 mb-5">
-            It's only shown once. We saved it on this device, but write it down in case you switch phones.
+            It's only shown once. It is saved on this device, but write it down in case.
           </p>
           <p class="text-xs font-semibold opacity-80 mb-5">
-            (seriously please save this otherwise youre gonna have to register again or youre gonna have to figure out how to ask me to give you the pin which will be annoying and i dont wanna do it plz)
+            (seriously please save this otherwise if you lose it youre gonna have to register again or youre gonna have to figure out how to ask me to give you the pin which will be annoying and i dont wanna do it plz)
           </p>
 
           <div class="flex flex-col sm:flex-row gap-3 justify-center">

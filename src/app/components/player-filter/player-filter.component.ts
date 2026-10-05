@@ -7,7 +7,11 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3" style="margin-bottom: 1.5rem;">
+      <p class="text-xs text-pub-foam/50 font-bold uppercase tracking-wide" style="text-align: center; margin-bottom: 0.375rem;">
+          Showing {{ store.visiblePlayers().length }} of {{ store.players().length }} players
+      </p>
+      
       <div
         class="card p-1.5 grid grid-cols-2 gap-1.5 w-full sm:w-auto"
         role="group"
@@ -32,10 +36,6 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
           ⭐ Original 5
         </button>
       </div>
-
-      <p class="text-xs text-pub-foam/50 font-bold uppercase tracking-wide" style="text-align: center; margin-bottom: 0.375rem;">
-        Showing {{ store.visiblePlayers().length }} of {{ store.players().length }} players
-      </p>
     </div>
   `,
 })

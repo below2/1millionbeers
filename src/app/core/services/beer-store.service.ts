@@ -8,10 +8,13 @@ import {
   Player,
   PlayerFilter,
   RegisterResult,
+  buildLeaderboard,
+  sortPlayers,
 } from '../models/beer.model';
 
 const PIN_STORAGE_KEY = 'beer-tracker-pin';
 const USERNAME_STORAGE_KEY = 'beer-tracker-username';
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 @Injectable({ providedIn: 'root' })
 export class BeerStoreService {
@@ -19,13 +22,19 @@ export class BeerStoreService {
 
   // ---- Raw state -----------------------------------------------------
   readonly logs = signal<BeerLog[]>([]);
-  readonly players = signal<Player[]>([]);
+  private readonly playersRaw = signal<Player[]>([]);
   readonly filter = signal<PlayerFilter>('all');
-  /** Player clicked in the leaderboard; narrows the activity feed only. */
+  /** Player clicked in the leaderboard; narrows the home activity feed only. */
   readonly selectedDrinkerFilter = signal<string | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly submitting = signal(false);
+
+  /** Ticks every minute so the rolling "past 7 days" window stays fresh. */
+  private readonly now = signal(Date.now());
+
+  /** All players, always ordered: primary first, then alphabetical within each group. */
+  readonly players = computed(() => sortPlayers(this.playersRaw()));
 
   // ---- Filter-aware base signals ---------------------------------------
   readonly primaryNames = computed(
@@ -47,10 +56,15 @@ export class BeerStoreService {
     return logs.filter((l) => names.has(l.drinker));
   });
 
+  /** Filtered logs from the past rolling 7 days. */
+  readonly weekLogs = computed(() => {
+    const cutoff = this.now() - 7 * DAY_MS;
+    return this.filteredLogs().filter((l) => new Date(l.created_at).getTime() >= cutoff);
+  });
+
   /**
    * The leaderboard selection, but only if that player is still visible under
-   * the All / Primary filter (otherwise null, so the feed never goes blank
-   * because of a hidden selection).
+   * the All / Primary filter (otherwise null).
    */
   readonly activeDrinkerFilter = computed(() => {
     const selected = this.selectedDrinkerFilter();
@@ -58,9 +72,12 @@ export class BeerStoreService {
     return this.visiblePlayers().some((p) => p.username === selected) ? selected : null;
   });
 
-  /** Logs for the activity feed: All / Primary filter + leaderboard selection. */
+  /**
+   * Home-page feed source: All/Primary filter + past 7 days + leaderboard
+   * selection. (The /history page builds its own scoped list locally.)
+   */
   readonly activityLogs = computed(() => {
-    const logs = this.filteredLogs();
+    const logs = this.weekLogs();
     const selected = this.activeDrinkerFilter();
     return selected ? logs.filter((l) => l.drinker === selected) : logs;
   });
@@ -72,26 +89,12 @@ export class BeerStoreService {
 
   readonly percentComplete = computed(() => (this.totalBeers() / GOAL_BEERS) * 100);
 
-  readonly leaderboard = computed<LeaderboardEntry[]>(() => {
-    const totals = new Map<Drinker, number>(
-      this.visiblePlayers().map((p) => [p.username, 0])
-    );
-    for (const log of this.filteredLogs()) {
-      if (totals.has(log.drinker)) {
-        totals.set(log.drinker, (totals.get(log.drinker) ?? 0) + log.count);
-      }
-    }
-    const groupTotal = [...totals.values()].reduce((a, b) => a + b, 0);
-
-    return [...totals.entries()]
-      .map(([drinker, total]) => ({
-        drinker,
-        total,
-        pct: groupTotal > 0 ? (total / groupTotal) * 100 : 0,
-      }))
-      .sort((a, b) => b.total - a.total || a.drinker.localeCompare(b.drinker))
-      .map((entry, i) => ({ ...entry, rank: i + 1 }));
-  });
+  readonly leaderboard = computed<LeaderboardEntry[]>(() =>
+    buildLeaderboard(
+      this.visiblePlayers().map((p) => p.username),
+      this.filteredLogs()
+    )
+  );
 
   readonly todayTotal = computed(() => {
     const startOfToday = this.startOfDay(new Date());
@@ -115,19 +118,18 @@ export class BeerStoreService {
       (min, l) => Math.min(min, new Date(l.created_at).getTime()),
       Date.now()
     );
-    const daysElapsed = Math.max(
-      1,
-      Math.ceil((Date.now() - earliest) / (1000 * 60 * 60 * 24))
-    );
+    const daysElapsed = Math.max(1, Math.ceil((Date.now() - earliest) / DAY_MS));
     return this.totalBeers() / daysElapsed;
   });
 
-  /** Latest 20 entries, respecting both the All/Primary filter and leaderboard selection. */
+  /** Latest 20 entries of the weekly feed. */
   readonly recentActivity = computed(() => this.activityLogs().slice(0, 20));
 
   // ---- Lifecycle --------------------------------------------------------
   constructor() {
     this.refresh();
+    setInterval(() => this.now.set(Date.now()), 60_000);
+
     this.supabase.subscribeToNewLogs((newLog) => {
       // If someone we haven't seen yet just logged (new sign-up), reload players.
       if (!this.players().some((p) => p.username === newLog.drinker)) {
@@ -147,7 +149,7 @@ export class BeerStoreService {
         this.supabase.fetchPlayers(),
         this.supabase.fetchLogs(),
       ]);
-      this.players.set(players);
+      this.playersRaw.set(players);
       this.logs.set(logs);
     } catch (err) {
       this.error.set(this.toMessage(err));
@@ -158,7 +160,7 @@ export class BeerStoreService {
 
   async refreshPlayers(): Promise<void> {
     try {
-      this.players.set(await this.supabase.fetchPlayers());
+      this.playersRaw.set(await this.supabase.fetchPlayers());
     } catch {
       /* non-fatal: the next full refresh will pick it up */
     }
@@ -186,7 +188,7 @@ export class BeerStoreService {
     try {
       const result = await this.supabase.registerDrinker(username);
 
-      this.players.update((current) =>
+      this.playersRaw.update((current) =>
         current.some((p) => p.username === result.username)
           ? current
           : [

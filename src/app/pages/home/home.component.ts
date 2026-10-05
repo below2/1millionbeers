@@ -36,7 +36,7 @@ import { PlayerFilterComponent } from '../../components/player-filter/player-fil
           <span
             class="font-arcade font-black uppercase tracking-wide text-[11px] sm:text-sm leading-tight"
           >
-            Want to join the race?
+            Randos can join here
           </span>
           <span
             class="shrink-0 inline-flex items-center bg-stout text-neon font-arcade font-black uppercase
@@ -55,13 +55,11 @@ import { PlayerFilterComponent } from '../../components/player-filter/player-fil
             ⚠️ Couldn't reach the database: {{ store.error() }}
           </div>
         }
-        
-        <app-player-filter />
-    
+
         <app-log-beer-form />
-        
+
         <!-- Divider: top section above, controls below -->
-        <div class="flex items-center gap-3 py-1" role="separator" aria-hidden="true">
+        <div class="flex items-center gap-3 py-1" style="margin-bottom: 1.5rem;" role="separator" aria-hidden="true">
           <div class="flex-1 border-t-2 border-dashed border-pub-border"></div>
           <span
             class="font-arcade font-black uppercase tracking-[0.25em] text-[10px] sm:text-xs text-pub-foam/40"
@@ -71,17 +69,27 @@ import { PlayerFilterComponent } from '../../components/player-filter/player-fil
           <div class="flex-1 border-t-2 border-dashed border-pub-border"></div>
         </div>
         
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" style="margin-bottom: 1.5rem;">
+        <app-player-filter />
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" style="margin-top: 0; margin-bottom: 1.5rem;">
           <app-stats-dashboard />
           <app-leaderboard />
         </div>
 
-        <app-activity-feed />
+        <app-activity-feed>
+          <a
+            feedActions
+            routerLink="/history"
+            class="btn-brutal inline-flex items-center !py-1.5 !px-3 text-xs sm:text-sm"
+          >
+            📜 View Full History
+          </a>
+        </app-activity-feed>
 
         <footer
           class="text-center text-xs text-pub-foam/40 pt-4 pb-2 font-bold uppercase tracking-widest"
         >
-          we be drankin
+          im not resetting ur pin if u forget
         </footer>
       </div>
     </div>

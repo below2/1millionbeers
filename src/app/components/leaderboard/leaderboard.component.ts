@@ -1,14 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { BeerStoreService } from '../../core/services/beer-store.service';
-import { CoreBadgeComponent } from '../core-badge/core-badge.component';
-import {
-  Drinker,
-  LeaderboardEntry,
-  avatarFallback,
-  avatarFor,
-  displayName,
-} from '../../core/models/beer.model';
+import { AvatarComponent } from '../avatar/avatar.component';
+import { LeaderboardEntry, displayName } from '../../core/models/beer.model';
 
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 const RANK_STYLES: Record<number, string> = {
@@ -22,10 +16,16 @@ const ROW_BASE =
   'transition-all cursor-pointer hover:-translate-y-0.5 ' +
   'focus:outline-none focus-visible:ring-4 focus-visible:ring-pub-foam';
 
+/**
+ * Leaderboard.
+ *  - No inputs   -> global mode: store leaderboard; clicking a row filters the home feed.
+ *  - `entries`   -> scoped mode: renders the given entries; clicking a row emits
+ *                   `drinkerToggle` and highlights `selected` (parent owns the state).
+ */
 @Component({
   selector: 'app-leaderboard',
   standalone: true,
-  imports: [CommonModule, CoreBadgeComponent],
+  imports: [CommonModule, AvatarComponent],
   template: `
     <section class="card p-5 sm:p-6">
       <div class="flex items-start justify-between gap-2 mb-1 flex-wrap">
@@ -33,7 +33,7 @@ const ROW_BASE =
           🏆 Leaderboard
         </h2>
 
-        @if (store.activeDrinkerFilter(); as active) {
+        @if (active()) {
           <div class="flex items-center gap-2">
             <button
               type="button"
@@ -45,7 +45,7 @@ const ROW_BASE =
             <button
               type="button"
               class="btn-brutal !py-1 !px-2.5 text-[11px] sm:text-xs"
-              (click)="store.clearDrinkerFilter()"
+              (click)="clear()"
             >
               ✕ Show all
             </button>
@@ -54,45 +54,37 @@ const ROW_BASE =
       </div>
 
       <p class="text-[11px] sm:text-xs text-pub-foam/40 font-bold mb-4">
-        @if (store.activeDrinkerFilter(); as active) {
-          Feed filtered to <span class="text-pub-amber">{{ name(active) }}</span>. Tap again to clear.
+        @if (active(); as a) {
+          Filtered to <span class="text-pub-amber">{{ name(a) }}</span>. Tap again to clear.
+        } @else if (scoped()) {
+          Tap a player to filter this page to them.
         } @else {
           Tap a player to filter the play-by-play.
         }
       </p>
 
       <ul class="space-y-3 max-h-[34rem] overflow-y-auto p-2">
-        @for (entry of store.leaderboard(); track entry.drinker) {
+        @for (entry of rows(); track entry.drinker) {
           <li>
             <button
               type="button"
               [ngClass]="rowClass(entry)"
-              [attr.aria-pressed]="isActive(entry.drinker)"
-              (click)="store.toggleDrinkerFilter(entry.drinker)"
+              [attr.aria-pressed]="active() === entry.drinker"
+              (click)="select(entry.drinker)"
             >
               <span class="w-8 text-center text-xl sm:text-2xl shrink-0">
                 {{ medal(entry.rank) }}
               </span>
 
-              <img
-                [src]="avatar(entry.drinker)"
-                (error)="onAvatarError($event, entry.drinker)"
-                [alt]="name(entry.drinker)"
-                class="avatar-ring w-9 h-9 sm:w-10 sm:h-10 shrink-0"
-              />
+              <app-avatar [name]="entry.drinker" sizeClass="w-9 h-9 sm:w-10 sm:h-10" />
 
               <div class="flex-1 min-w-0">
                 <div class="flex justify-between items-baseline gap-2 mb-1">
-                  <span class="flex items-center gap-1.5 min-w-0">
-                    <span
-                      class="font-extrabold truncate"
-                      [class.text-stout]="entry.rank <= 3"
-                    >
-                      {{ name(entry.drinker) }}
-                    </span>
-                    @if (store.isPrimary(entry.drinker)) {
-                      <app-core-badge />
-                    }
+                  <span
+                    class="font-extrabold truncate"
+                    [class.text-stout]="entry.rank <= 3"
+                  >
+                    {{ name(entry.drinker) }}
                   </span>
                   <span
                     class="text-sm font-mono font-bold shrink-0"
@@ -124,20 +116,45 @@ const ROW_BASE =
 })
 export class LeaderboardComponent {
   readonly store = inject(BeerStoreService);
-  readonly avatar = avatarFor;
   readonly name = displayName;
+
+  /** Optional scoped entries. When null, falls back to the global store. */
+  readonly entries = input<LeaderboardEntry[] | null>(null);
+  /** Highlighted drinker in scoped mode (ignored in global mode). */
+  readonly selected = input<string | null>(null);
+  /** Scoped mode: a row was tapped. Parent decides what to do with it. */
+  readonly drinkerToggle = output<string>();
+
+  readonly scoped = computed(() => this.entries() !== null);
+  readonly rows = computed(() => this.entries() ?? this.store.leaderboard());
+  readonly active = computed(() =>
+    this.scoped() ? this.selected() : this.store.activeDrinkerFilter()
+  );
 
   medal(rank: number): string {
     return MEDALS[rank] ?? `#${rank}`;
   }
 
-  isActive(username: string): boolean {
-    return this.store.activeDrinkerFilter() === username;
+  select(username: string): void {
+    if (this.scoped()) {
+      this.drinkerToggle.emit(username);
+    } else {
+      this.store.toggleDrinkerFilter(username);
+    }
+  }
+
+  clear(): void {
+    const current = this.active();
+    if (this.scoped()) {
+      if (current) this.drinkerToggle.emit(current); // toggling the active one clears it
+    } else {
+      this.store.clearDrinkerFilter();
+    }
   }
 
   rowClass(entry: LeaderboardEntry): string {
     const rank = RANK_STYLES[entry.rank] ?? 'bg-pub-surface2 border-stout';
-    const active = this.store.activeDrinkerFilter();
+    const active = this.active();
 
     let state = '';
     if (active) {
@@ -151,9 +168,5 @@ export class LeaderboardComponent {
 
   scrollToFeed(): void {
     document.getElementById('activity-feed')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  onAvatarError(event: Event, name: Drinker): void {
-    (event.target as HTMLImageElement).src = avatarFallback(name);
   }
 }
