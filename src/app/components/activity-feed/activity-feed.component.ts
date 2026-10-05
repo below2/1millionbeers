@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { BeerStoreService } from '../../core/services/beer-store.service';
+import { CoreBadgeComponent } from '../core-badge/core-badge.component';
 import { TimeAgoPipe } from './time-ago.pipe';
 import { Drinker, avatarFallback, avatarFor, displayName } from '../../core/models/beer.model';
 
@@ -9,9 +10,9 @@ const PAGE_SIZE = 10;
 @Component({
   selector: 'app-activity-feed',
   standalone: true,
-  imports: [CommonModule, TimeAgoPipe],
+  imports: [CommonModule, TimeAgoPipe, CoreBadgeComponent],
   template: `
-    <section class="card p-5 sm:p-6">
+    <section id="activity-feed" class="card p-5 sm:p-6 scroll-mt-4">
       <div class="flex items-center justify-between gap-2 mb-4 flex-wrap">
         <div class="flex items-center gap-2">
           <span class="live-dot"></span>
@@ -31,10 +32,42 @@ const PAGE_SIZE = 10;
         }
       </div>
 
+      <!-- Active leaderboard filter -->
+      @if (store.activeDrinkerFilter(); as active) {
+        <div
+          class="flex items-center justify-between gap-3 mb-4 p-2.5 rounded-xl border-3 border-pub-amber bg-pub-surface2"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <img
+              [src]="avatar(active)"
+              (error)="onAvatarError($event, active)"
+              [alt]="name(active)"
+              class="avatar-ring w-7 h-7 shrink-0"
+            />
+            <p class="text-sm font-bold truncate">
+              Showing only <span class="text-pub-amber">{{ name(active) }}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn-brutal !py-1 !px-2.5 text-[11px] sm:text-xs shrink-0"
+            (click)="store.clearDrinkerFilter()"
+          >
+            ✕ Show all
+          </button>
+        </div>
+      }
+
       @if (store.loading()) {
         <p class="text-pub-foam/50 text-sm">Loading the box score...</p>
       } @else if (totalLogs() === 0) {
-        <p class="text-pub-foam/50 text-sm">No beers logged yet. Somebody get the season started.</p>
+        @if (store.activeDrinkerFilter(); as active) {
+          <p class="text-pub-foam/50 text-sm">
+            {{ name(active) }} hasn't logged anything yet. Suspicious.
+          </p>
+        } @else {
+          <p class="text-pub-foam/50 text-sm">No beers logged yet. Somebody get the season started.</p>
+        }
       } @else {
         <ul class="space-y-2.5">
           @for (log of pagedLogs(); track log.id) {
@@ -51,6 +84,9 @@ const PAGE_SIZE = 10;
               <div class="min-w-0 flex-1">
                 <p class="text-sm text-pub-foam leading-snug">
                   <span class="font-extrabold text-pub-amber">{{ name(log.drinker) }}</span>
+                  @if (store.isPrimary(log.drinker)) {
+                    <app-core-badge class="align-middle ml-1" />
+                  }
                   logged
                   <span class="font-extrabold text-neon">{{ log.count }}</span>
                   {{ log.count === 1 ? 'beer' : 'beers' }}
@@ -112,24 +148,29 @@ export class ActivityFeedComponent {
   readonly pageSize = PAGE_SIZE;
   readonly page = signal(1);
 
-  // Respects the All / Primary filter
-  readonly totalLogs = computed(() => this.store.filteredLogs().length);
+  // Respects both the All/Primary toggle and the leaderboard selection
+  readonly totalLogs = computed(() => this.store.activityLogs().length);
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalLogs() / this.pageSize)));
 
   private readonly clampedPage = computed(() => Math.min(this.page(), this.totalPages()));
 
   readonly pagedLogs = computed(() => {
     const start = (this.clampedPage() - 1) * this.pageSize;
-    return this.store.filteredLogs().slice(start, start + this.pageSize);
+    return this.store.activityLogs().slice(start, start + this.pageSize);
   });
 
-  readonly rangeStart = computed(() => (this.totalLogs() === 0 ? 0 : (this.clampedPage() - 1) * this.pageSize + 1));
-  readonly rangeEnd = computed(() => Math.min(this.totalLogs(), this.clampedPage() * this.pageSize));
+  readonly rangeStart = computed(() =>
+    this.totalLogs() === 0 ? 0 : (this.clampedPage() - 1) * this.pageSize + 1
+  );
+  readonly rangeEnd = computed(() =>
+    Math.min(this.totalLogs(), this.clampedPage() * this.pageSize)
+  );
 
   constructor() {
-    // Switching All <-> Primary jumps back to page 1.
+    // Changing either filter jumps back to page 1.
     effect(() => {
       this.store.filter();
+      this.store.activeDrinkerFilter();
       this.page.set(1);
     });
   }

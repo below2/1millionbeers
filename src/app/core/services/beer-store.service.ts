@@ -21,28 +21,48 @@ export class BeerStoreService {
   readonly logs = signal<BeerLog[]>([]);
   readonly players = signal<Player[]>([]);
   readonly filter = signal<PlayerFilter>('all');
+  /** Player clicked in the leaderboard; narrows the activity feed only. */
+  readonly selectedDrinkerFilter = signal<string | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly submitting = signal(false);
 
   // ---- Filter-aware base signals ---------------------------------------
-  private readonly primaryNames = computed(
+  readonly primaryNames = computed(
     () => new Set(this.players().filter((p) => p.is_primary).map((p) => p.username))
   );
 
-  /** Players that count under the active filter. */
+  /** Players that count under the active All / Primary filter. */
   readonly visiblePlayers = computed(() =>
     this.filter() === 'primary'
       ? this.players().filter((p) => p.is_primary)
       : this.players()
   );
 
-  /** Logs that count under the active filter. Everything below derives from this. */
+  /** Logs that count under the active All / Primary filter. */
   readonly filteredLogs = computed(() => {
     const logs = this.logs();
     if (this.filter() === 'all') return logs;
     const names = this.primaryNames();
     return logs.filter((l) => names.has(l.drinker));
+  });
+
+  /**
+   * The leaderboard selection, but only if that player is still visible under
+   * the All / Primary filter (otherwise null, so the feed never goes blank
+   * because of a hidden selection).
+   */
+  readonly activeDrinkerFilter = computed(() => {
+    const selected = this.selectedDrinkerFilter();
+    if (!selected) return null;
+    return this.visiblePlayers().some((p) => p.username === selected) ? selected : null;
+  });
+
+  /** Logs for the activity feed: All / Primary filter + leaderboard selection. */
+  readonly activityLogs = computed(() => {
+    const logs = this.filteredLogs();
+    const selected = this.activeDrinkerFilter();
+    return selected ? logs.filter((l) => l.drinker === selected) : logs;
   });
 
   // ---- Derived state (Signals) ----------------------------------------
@@ -102,7 +122,8 @@ export class BeerStoreService {
     return this.totalBeers() / daysElapsed;
   });
 
-  readonly recentActivity = computed(() => this.filteredLogs().slice(0, 20));
+  /** Latest 20 entries, respecting both the All/Primary filter and leaderboard selection. */
+  readonly recentActivity = computed(() => this.activityLogs().slice(0, 20));
 
   // ---- Lifecycle --------------------------------------------------------
   constructor() {
@@ -143,6 +164,21 @@ export class BeerStoreService {
     }
   }
 
+  // ---- Leaderboard -> feed filter ------------------------------------------
+  /** Click a player to filter the feed; click again to clear. */
+  toggleDrinkerFilter(username: string): void {
+    this.selectedDrinkerFilter.update((current) => (current === username ? null : username));
+  }
+
+  clearDrinkerFilter(): void {
+    this.selectedDrinkerFilter.set(null);
+  }
+
+  isPrimary(username: string): boolean {
+    return this.primaryNames().has(username);
+  }
+
+  // ---- Mutations -----------------------------------------------------------
   async registerDrinker(
     username: string
   ): Promise<{ success: true; result: RegisterResult } | { success: false; message: string }> {

@@ -7,7 +7,7 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+    <section class="grid grid-cols-1 gap-3">
       <div class="card p-4 sm:p-5 text-center">
         <p class="text-3xl mb-1">🤕</p>
         <p class="text-2xl sm:text-3xl font-arcade font-black text-pub-amber">

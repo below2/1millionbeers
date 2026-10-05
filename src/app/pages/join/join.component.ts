@@ -79,8 +79,7 @@ const USERNAME_RE = /^[a-zA-Z0-9]{3,20}$/;
 
           <p
             class="text-xs mt-2 min-h-4 font-bold"
-            [class.text-red-400]="!!hint()"
-            [class.text-pub-foam/40]="!hint()"
+            [ngClass]="hint() ? 'text-red-400' : 'text-pub-foam/40'"
           >
             {{ hint() || 'Usernames are lowercase. Letters and numbers only.' }}
           </p>

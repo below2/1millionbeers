@@ -33,7 +33,7 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
         </button>
       </div>
 
-      <p class="text-xs text-pub-foam/50 font-bold uppercase tracking-wide">
+      <p class="text-xs text-pub-foam/50 font-bold uppercase tracking-wide" style="text-align: center; margin-bottom: 0.375rem;">
         Showing {{ store.visiblePlayers().length }} of {{ store.players().length }} players
       </p>
     </div>
