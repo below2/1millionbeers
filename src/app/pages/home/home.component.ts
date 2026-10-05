@@ -37,9 +37,6 @@ import { PlayerFilterComponent } from '../../components/player-filter/player-fil
             class="font-arcade font-black uppercase tracking-wide text-[11px] sm:text-sm leading-tight"
           >
             Want to join the race?
-            <span class="underline decoration-2 underline-offset-2">
-              Click here to join the challenge
-            </span>
           </span>
           <span
             class="shrink-0 inline-flex items-center bg-stout text-neon font-arcade font-black uppercase

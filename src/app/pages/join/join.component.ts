@@ -37,17 +37,20 @@ const USERNAME_RE = /^[a-zA-Z0-9]{3,20}$/;
           </div>
 
           <p class="font-arcade font-black uppercase text-sm sm:text-base mb-1">
-            ⚠️ Save this PIN! You will need it to log beers.
+            Save this PIN! You will need it to log beers.
           </p>
           <p class="text-xs font-semibold opacity-80 mb-5">
             It's only shown once. We saved it on this device, but write it down in case you switch phones.
+          </p>
+          <p class="text-xs font-semibold opacity-80 mb-5">
+            (seriously please save this otherwise youre gonna have to register again or youre gonna have to figure out how to ask me to give you the pin which will be annoying and i dont wanna do it plz)
           </p>
 
           <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <button type="button" class="btn-brutal" (click)="copyPin(r)">
               {{ copied() ? '✅ Copied' : '📋 Copy PIN' }}
             </button>
-            <a routerLink="/" class="btn-brutal btn-brutal-active text-center">Back to Challenge 🍺</a>
+            <a routerLink="/" class="btn-brutal btn-brutal-active text-center">Back to Challenge</a>
           </div>
         </section>
       } @else {

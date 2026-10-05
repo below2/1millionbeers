@@ -29,7 +29,7 @@ import { BeerStoreService } from '../../core/services/beer-store.service';
           [attr.aria-pressed]="store.filter() === 'primary'"
           (click)="store.filter.set('primary')"
         >
-          ⭐ Core 5 / Primary
+          ⭐ Original 5
         </button>
       </div>
 
