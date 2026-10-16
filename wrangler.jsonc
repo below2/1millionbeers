@@ -11,5 +11,6 @@
   "assets": {
     "directory": "dist/beer-tracker",
     "not_found_handling": "single-page-application"
-  }
+  },
+  "previews": {}
 }
