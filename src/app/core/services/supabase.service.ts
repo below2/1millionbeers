@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
 import { BeerLog, Drinker, Player, RegisterResult } from '../models/beer.model';
+import { NewsItem } from '../models/news.model';
 
 /**
  * Thin wrapper around the Supabase client. Keeps all direct SDK usage in one
@@ -36,6 +37,19 @@ export class SupabaseService {
 
     if (error) throw error;
     return (data ?? []) as Player[];
+  }
+
+  /** The newest active news item, or null if there isn't one. */
+  async fetchLatestNews(): Promise<NewsItem | null> {
+    const { data, error } = await this.client
+      .from('news_items')
+      .select('id, message, is_active, created_at')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+    return ((data ?? [])[0] as NewsItem | undefined) ?? null;
   }
 
   /** Register a new player. Returns the generated PIN (shown to the user once). */

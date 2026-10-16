@@ -8,6 +8,7 @@ import { LeaderboardComponent } from '../../components/leaderboard/leaderboard.c
 import { StatsDashboardComponent } from '../../components/stats-dashboard/stats-dashboard.component';
 import { ActivityFeedComponent } from '../../components/activity-feed/activity-feed.component';
 import { PlayerFilterComponent } from '../../components/player-filter/player-filter.component';
+import { NewsComponent } from '../../components/news/news.component';
 
 @Component({
   selector: 'app-home',
@@ -15,6 +16,7 @@ import { PlayerFilterComponent } from '../../components/player-filter/player-fil
   imports: [
     CommonModule,
     RouterLink,
+    NewsComponent,
     HeroProgressComponent,
     LogBeerFormComponent,
     LeaderboardComponent,
@@ -46,6 +48,9 @@ import { PlayerFilterComponent } from '../../components/player-filter/player-fil
           </span>
         </div>
       </a>
+
+      <!-- Pub Bulletin: renders nothing when there's no active (or undismissed) news -->
+      <app-news />
 
       <div class="px-4 py-5 sm:px-6 sm:py-8 max-w-5xl mx-auto space-y-6">
         <app-hero-progress />
