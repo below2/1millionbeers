@@ -24,8 +24,10 @@ const DISMISSED_KEY = 'dismissed_news_id';
         class="block bg-neon text-stout border-b-4 border-stout"
       >
         <div
-          class="max-w-5xl mx-auto px-4 py-2 sm:py-2.5 flex items-center justify-center gap-2 sm:gap-3 text-center"
+          class="w-full max-w-md sm:max-w-none mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 
+                 flex items-center justify-between gap-2 sm:gap-4 text-center"
         >
+          <!-- 📢 NEWS (Anchored to the far left on desktop) -->
           <span
             class="shrink-0 inline-flex items-center bg-stout text-neon font-arcade font-black uppercase
                    text-[10px] sm:text-xs px-2.5 py-1 rounded-full"
@@ -33,13 +35,15 @@ const DISMISSED_KEY = 'dismissed_news_id';
             📢 News
           </span>
 
+          <!-- MESSAGE (Centered in the middle) -->
           <p
             class="flex-1 min-w-0 font-arcade font-black tracking-wide text-[11px] sm:text-sm
-                   leading-tight break-words"
+                   leading-tight break-words text-center"
           >
             {{ item.message }}
           </p>
 
+          <!-- CLOSE BUTTON (Anchored to the far right on desktop) -->
           <button
             type="button"
             class="shrink-0 inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg

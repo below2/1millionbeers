@@ -185,7 +185,7 @@ export class ActivityFeedComponent {
     if (this.scoped()) return 'No activity found for this period.';
     const active = this.activeDrinker();
     if (active) return `${displayName(active)} hasn't logged a beer this week. Suspicious.`;
-    return 'No beers logged this week yet! Time to get cracking.';
+    return 'no beers logged this week? did we all die? did we stop using this? what happened to us';
   });
 
   readonly totalLogs = computed(() => this.feedLogs().length);

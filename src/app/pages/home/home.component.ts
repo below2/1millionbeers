@@ -86,7 +86,7 @@ import { NewsComponent } from '../../components/news/news.component';
         <footer
           class="text-center text-xs text-pub-foam/40 pt-4 pb-2 font-bold uppercase tracking-widest"
         >
-          im not resetting ur pin if u forget
+          okay yes ill reset your pin if u ask
         </footer>
       </div>
     </div>
