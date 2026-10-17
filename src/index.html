@@ -2,11 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>1,000,000 Beers Challenge 🍺</title>
+  <title>1,000,000 Beers</title>
   <base href="/" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+  <!-- Core search & identity -->
+  <meta name="description" content="Tracking five (kinda 4, but also kinda more) friends on a quest to drink 1,000,000 beers" />
+  <link rel="canonical" href="https://1millionbeers.com" />
   <meta name="theme-color" content="#12100e" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+  <!-- Open Graph (iMessage, Discord, WhatsApp, Reddit, Facebook) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="1,000,000 Beers" />
+  <meta property="og:url" content="https://1millionbeers.com" />
+  <meta property="og:title" content="1,000,000 Beers" />
+  <meta property="og:description" content="Five friends (sort of). One million beers. One lifetime." />
+  <meta property="og:image" content="https://1millionbeers.com/assets/og-image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="1,000,000 Beers Challenge: a pint glass filling toward one million beers" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="1,000,000 Beers" />
+  <meta name="twitter:description" content="Five friends (sort of). One million beers. One lifetime." />
+  <meta name="twitter:image" content="https://1millionbeers.com/assets/og-image.png" />
+  <meta name="twitter:image:alt" content="1,000,000 Beers Challenge: a pint glass filling toward one million beers" />
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "1,000,000 Beers",
+    "url": "https://1millionbeers.com",
+    "operatingSystem": "All",
+    "applicationCategory": "EntertainmentApplication",
+    "description": "A live community tracker following a long-term challenge to reach one million beers.",
+    "browserRequirements": "Requires JavaScript",
+    "inLanguage": "en",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 </head>
 <body class="bg-pub-bg">
   <app-root></app-root>

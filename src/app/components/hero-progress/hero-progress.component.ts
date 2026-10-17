@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, NgZone, computed, effect, inject, signal, untracked } from '@angular/core';
 import { BeerStoreService } from '../../core/services/beer-store.service';
 import { GOAL_BEERS } from '../../core/models/beer.model';
 
@@ -7,6 +7,150 @@ import { GOAL_BEERS } from '../../core/models/beer.model';
 const SPRINT_SIZE = 100;
 /** How long the milestone celebration stays on screen. */
 const CELEBRATE_MS = 4500;
+/** How long the full-screen toast stays up. */
+const TOAST_MS = 5500;
+/** localStorage key holding the highest milestone already celebrated on this device. */
+const LAST_CELEBRATED_KEY = 'last_celebrated_milestone';
+
+const CONFETTI_COLORS = ['#f2a71b', '#39ff88', '#fdf6e3', '#e6b800', '#1fcf6b', '#d4880a'];
+
+interface ConfettiPiece {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  rot: number;
+  vr: number;
+  wobble: number;
+  vw: number;
+  color: string;
+  round: boolean;
+}
+
+/**
+ * Self-contained full-screen confetti rain.
+ * Creates a temporary fixed canvas (pointer-events: none, very high z-index) so it
+ * never blocks clicks or scrolling, then removes itself when the last piece falls.
+ * Skipped entirely for users who prefer reduced motion.
+ */
+function launchConfetti(): void {
+  if (typeof document === 'undefined') return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.setAttribute('aria-hidden', 'true');
+  canvas.style.cssText =
+    'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    canvas.remove();
+    return;
+  }
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const resize = (): void => {
+    canvas.width = Math.round(window.innerWidth * dpr);
+    canvas.height = Math.round(window.innerHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const EMIT_MS = 2500; // how long new pieces keep spawning
+  const MAX_MS = 9000; // hard stop, no matter what
+  const RATE = 90; // pieces per second while emitting
+  const GRAVITY = 520; // px / s^2
+  const pieces: ConfettiPiece[] = [];
+
+  const spawn = (yStart: number): void => {
+    pieces.push({
+      x: Math.random() * window.innerWidth,
+      y: yStart,
+      vx: (Math.random() - 0.5) * 160,
+      vy: 60 + Math.random() * 180,
+      size: 7 + Math.random() * 7,
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 10,
+      wobble: Math.random() * Math.PI * 2,
+      vw: 4 + Math.random() * 6,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      round: Math.random() < 0.25,
+    });
+  };
+
+  // Opening burst so it feels instant, spread above the viewport.
+  for (let i = 0; i < 80; i++) spawn(-Math.random() * window.innerHeight * 0.4);
+
+  const start = performance.now();
+  let last = start;
+  let carry = 0;
+
+  const finish = (): void => {
+    window.removeEventListener('resize', resize);
+    canvas.remove();
+  };
+
+  const frame = (now: number): void => {
+    const elapsed = now - start;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
+    if (elapsed < EMIT_MS) {
+      carry += RATE * dt;
+      while (carry >= 1) {
+        spawn(-20);
+        carry -= 1;
+      }
+    }
+
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    for (let i = pieces.length - 1; i >= 0; i--) {
+      const p = pieces[i];
+      p.vy += GRAVITY * dt;
+      p.vx *= 1 - 0.8 * dt; // air drag
+      p.vy = Math.min(p.vy, 380); // terminal velocity so it flutters down
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      p.wobble += p.vw * dt;
+
+      if (p.y > window.innerHeight + 30) {
+        pieces.splice(i, 1);
+        continue;
+      }
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.scale(1, Math.cos(p.wobble)); // flipping-paper effect
+      ctx.fillStyle = p.color;
+      ctx.strokeStyle = '#0b0908';
+      ctx.lineWidth = 1.5;
+      if (p.round) {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        ctx.strokeRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      }
+      ctx.restore();
+    }
+
+    if (elapsed >= MAX_MS || (elapsed >= EMIT_MS && pieces.length === 0)) {
+      finish();
+      return;
+    }
+    requestAnimationFrame(frame);
+  };
+
+  requestAnimationFrame(frame);
+}
 
 @Component({
   selector: 'app-hero-progress',
@@ -164,7 +308,7 @@ const CELEBRATE_MS = 4500;
       </div>
 
       <!-- Absurd ETA joke card -->
-      <div class="mt-6 sm:mt-8 card-amber block px-4 py-3 sm:px-6 sm:py-4 text-left max-w-xl mx-auto">
+      <div class="mt-6 sm:mt-8 card-amber block px-4 py-3 sm:px-6 sm:py-4 text-left w-full max-w-xl sm:max-w-none mx-auto">
         <p class="font-arcade text-[10px] sm:text-xs uppercase tracking-widest mb-1 opacity-70">
           📊this will definitely happen
         </p>
@@ -173,11 +317,28 @@ const CELEBRATE_MS = 4500;
         </p>
       </div>
     </section>
+
+    <!-- Full-screen milestone toast (fixed, non-blocking, auto-dismisses) -->
+    @if (toastMilestone(); as milestone) {
+      <div
+        class="pointer-events-none fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-[calc(100%-2rem)] max-w-md"
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          class="card-neon animate-pop px-4 py-3 text-center font-arcade font-black uppercase
+                 text-xs sm:text-base leading-snug"
+        >
+          🎉 wooo (we have a problem guys): {{ milestone | number }} drinks! 🎉
+        </div>
+      </div>
+    }
   `,
 })
 export class HeroProgressComponent {
   readonly store = inject(BeerStoreService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly zone = inject(NgZone);
 
   readonly goal = GOAL_BEERS;
   readonly sprintSize = SPRINT_SIZE;
@@ -202,16 +363,33 @@ export class HeroProgressComponent {
     return level === 0 ? 'The Warm-Up' : `The ${level * SPRINT_SIZE}s`;
   });
 
-  // ---- Milestone celebration ---------------------------------------------------
+  // ---- Milestone celebration (in-card) ---------------------------------------
   readonly celebrating = signal(false);
 
   private lastLevel: number | null = null;
   private lastFilter: string | null = null;
   private celebrateTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // ---- Milestone confetti + toast (once per milestone, per device) ----------
+  /** Milestone shown in the toast, or null when hidden. */
+  readonly toastMilestone = signal<number | null>(null);
+
+  /**
+   * Total across ALL logs, ignoring the All / Original 5 filter, so toggling
+   * the filter can never trigger a celebration. This is the real group total.
+   */
+  private readonly groupTotal = computed(() =>
+    this.store.logs().reduce((sum, log) => sum + log.count, 0)
+  );
+
+  /** Highest milestone already celebrated (localStorage, with in-memory fallback). */
+  private lastCelebrated = this.readLastCelebrated();
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor() {
     this.destroyRef.onDestroy(() => {
       if (this.celebrateTimer) clearTimeout(this.celebrateTimer);
+      if (this.toastTimer) clearTimeout(this.toastTimer);
     });
 
     effect(() => {
@@ -232,12 +410,53 @@ export class HeroProgressComponent {
       }
       this.lastLevel = level;
     });
+
+    // Confetti: wait for the initial load, then fire whenever the group total
+    // reaches a milestone higher than any this device has celebrated before.
+    effect(() => {
+      if (this.store.loading()) return;
+      const milestone = Math.floor(this.groupTotal() / SPRINT_SIZE) * SPRINT_SIZE;
+      untracked(() => this.maybeCelebrateMilestone(milestone));
+    });
   }
 
   private celebrate(): void {
     if (this.celebrateTimer) clearTimeout(this.celebrateTimer);
     this.celebrating.set(true);
     this.celebrateTimer = setTimeout(() => this.celebrating.set(false), CELEBRATE_MS);
+  }
+
+  private maybeCelebrateMilestone(milestone: number): void {
+    if (milestone <= 0 || milestone <= this.lastCelebrated) return;
+
+    // Record first so a re-run of the effect can never fire twice.
+    this.lastCelebrated = milestone;
+    this.saveLastCelebrated(milestone);
+
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastMilestone.set(milestone);
+    this.toastTimer = setTimeout(() => this.toastMilestone.set(null), TOAST_MS);
+
+    // Run the animation loop outside Angular so it doesn't trigger change
+    // detection on every frame.
+    this.zone.runOutsideAngular(() => launchConfetti());
+  }
+
+  private readLastCelebrated(): number {
+    try {
+      const n = parseInt(localStorage.getItem(LAST_CELEBRATED_KEY) ?? '', 10);
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private saveLastCelebrated(milestone: number): void {
+    try {
+      localStorage.setItem(LAST_CELEBRATED_KEY, String(milestone));
+    } catch {
+      /* localStorage unavailable: the in-memory value still prevents repeats this session */
+    }
   }
 
   // ---- ETA joke (presentation only) ------------------------------------------
@@ -249,7 +468,7 @@ export class HeroProgressComponent {
 
     const pace = this.store.avgPerDay();
     if (!pace || pace <= 0) {
-      return "At the current pace of literally nothing, you'll hit 1,000,000 beers approximately never. Drink faster.";
+      return "At the current pace of literally nothing, we'll hit 1,000,000 beers approximately never. Drink faster.";
     }
 
     const daysLeft = remaining / pace;
@@ -258,9 +477,9 @@ export class HeroProgressComponent {
 
     // Keep the joke sane if the pace is microscopic.
     if (etaYear > 9999) {
-      return "At this pace, you'll hit 1,000,000 beers sometime after the heat death of the pub. Drink faster.";
+      return "At this pace, we'll hit 1,000,000 beers sometime after the heat death of the pub. Drink faster.";
     }
 
-    return `At this pace, you'll reach 1,000,000 beers in the year ${etaYear}. Drink fast, die young.`;
+    return `At this pace, we'll reach 1,000,000 beers in the year ${etaYear}. Drink fast, die young.`;
   });
 }
