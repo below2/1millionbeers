@@ -26,33 +26,25 @@ import { NewsComponent } from '../../components/news/news.component';
   ],
   template: `
     <div class="min-h-screen">
-      <!-- Top announcement banner: slim so the hero stays above the fold on mobile -->
-      <a
-        routerLink="/join"
-        class="group block bg-neon text-stout border-b-4 border-stout transition-colors hover:bg-neon2"
-      >
-        <div
-          class="max-w-5xl mx-auto px-4 py-2 sm:py-2.5 flex items-center justify-center gap-2 sm:gap-3 text-center"
-        >
-          <span class="text-base sm:text-lg animate-wiggle" aria-hidden="true">🍺</span>
-          <span
-            class="font-arcade font-black uppercase tracking-wide text-[11px] sm:text-sm leading-tight"
-          >
-            Randos can join here
-          </span>
-          <span
-            class="shrink-0 inline-flex items-center bg-stout text-neon font-arcade font-black uppercase
-                   text-[10px] sm:text-xs px-2.5 py-1 rounded-full transition-transform group-hover:translate-x-0.5"
-          >
-            Join →
-          </span>
-        </div>
-      </a>
-
-      <!-- Pub Bulletin: renders nothing when there's no active (or undismissed) news -->
+      <!-- Sole top banner. Renders no box at all when there's no active/undismissed news. -->
       <app-news />
 
       <div class="px-4 py-5 sm:px-6 sm:py-8 max-w-5xl mx-auto space-y-6">
+        <!-- Join CTA: compact card directly above the log form -->
+        <div class="card flex items-center justify-between gap-3 p-3 sm:p-4" style="margin-bottom: 1.5rem;">
+          <p class="min-w-0 text-sm sm:text-base font-bold leading-snug text-pub-foam">
+            <span aria-hidden="true">🍺</span>
+            New people can join here
+          </p>
+          <a
+            routerLink="/join"
+            class="btn-brutal shrink-0 inline-flex items-center !py-1.5 !px-3 text-xs sm:text-sm
+                   !bg-neon !text-stout font-arcade font-black uppercase tracking-wide"
+          >
+            Join →
+          </a>
+        </div>
+
         <app-hero-progress />
 
         @if (store.error()) {

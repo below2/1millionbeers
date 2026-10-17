@@ -5,44 +5,55 @@ import { NewsItem } from '../../core/models/news.model';
 const DISMISSED_KEY = 'dismissed_news_id';
 
 /**
- * Pub Bulletin banner. Shows the latest active news item from Supabase and
- * renders nothing at all when there is none, or when the user has already
- * dismissed that specific item (tracked by id in localStorage).
+ * Top-of-page news banner (formerly the Join banner's slot and styling).
+ * Shows the latest active news item and renders nothing at all when there is
+ * none, or when the user already dismissed that specific id (localStorage).
+ *
+ * The host uses `display: contents`, so with nothing to show the component
+ * has no box and leaves no margin or gap behind.
  */
 @Component({
   selector: 'app-news',
   standalone: true,
+  host: { class: 'contents' },
   template: `
     @if (visible(); as item) {
-      <div class="px-4 pt-5 sm:px-6 sm:pt-8 max-w-5xl mx-auto">
-        <aside
-          role="status"
-          aria-live="polite"
-          class="card flex items-start gap-3 p-3 sm:p-4 border-pub-amber"
+      <aside
+        role="status"
+        aria-live="polite"
+        class="block bg-neon text-stout border-b-4 border-stout"
+      >
+        <div
+          class="max-w-5xl mx-auto px-4 py-2 sm:py-2.5 flex items-center justify-center gap-2 sm:gap-3 text-center"
         >
           <span
-            class="shrink-0 self-start bg-pub-amber text-stout font-arcade font-black uppercase
-                   tracking-wider text-[10px] sm:text-xs px-2.5 py-1 rounded-lg border-3 border-stout
-                   shadow-brutalSm"
+            class="shrink-0 inline-flex items-center bg-stout text-neon font-arcade font-black uppercase
+                   text-[10px] sm:text-xs px-2.5 py-1 rounded-full"
           >
             📢 News
           </span>
 
-          <p class="flex-1 min-w-0 text-sm sm:text-base font-bold leading-snug break-words text-pub-foam pt-0.5">
+          <p
+            class="flex-1 min-w-0 font-arcade font-black tracking-wide text-[11px] sm:text-sm
+                   leading-tight break-words"
+          >
             {{ item.message }}
           </p>
 
           <button
             type="button"
-            class="btn-brutal shrink-0 !py-1 !px-2.5 text-xs sm:text-sm"
+            class="shrink-0 inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-lg
+                   border-3 border-stout bg-neon2 text-stout font-arcade font-black text-xs sm:text-sm
+                   leading-none transition-all hover:bg-stout hover:text-neon
+                   active:translate-y-px focus:outline-none focus-visible:ring-2 focus-visible:ring-stout"
             aria-label="Dismiss announcement"
             title="Dismiss"
             (click)="dismiss(item)"
           >
             ✕
           </button>
-        </aside>
-      </div>
+        </div>
+      </aside>
     }
   `,
 })
